@@ -1045,7 +1045,7 @@ test.describe("Guid", () => {
     }
 
     console.log(
-      `✅ GUID "${expectedGuid}" — ข้อมูลพื้นที่ใน Modal แสดงถูกต้องครบถ้วน — ผ่าน`,
+      `✅GUID "${expectedGuid}" — ข้อมูลพื้นที่ใน Modal แสดงถูกต้องครบถ้วน — ผ่าน`,
     );
   });
 

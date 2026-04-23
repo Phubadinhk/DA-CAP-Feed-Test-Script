@@ -43,7 +43,7 @@ export class AreaPage {
 
   get noResultMessage(): Locator {
     return this.tabPanel.getByText(
-      "ไม่พบผลลัพธ์การค้นหาที่ตรงกับเงื่อนไขของคุณ"
+      "ไม่พบผลลัพธ์การค้นหาที่ตรงกับเงื่อนไขของคุณ",
     );
   }
 
@@ -93,52 +93,21 @@ export class AreaPage {
   // ─── Province Selection ───────────────────────────────────────────────────
 
   async selectProvince(provinceName: string): Promise<boolean> {
-    const candidates: Locator[] = [
-      this.tabPanel.getByRole("combobox", { name: /จังหวัด/i }),
-      this.tabPanel.locator("#provinceAreaSelect"),
-      this.tabPanel.locator("#provinceSelect"),
-      this.tabPanel.locator("select[name*='province' i]"),
-      this.tabPanel.locator("select").first(),
-    ];
-
-    for (const selectLocator of candidates) {
-      const first = selectLocator.first();
-      if (!(await first.isVisible({ timeout: 3000 }).catch(() => false)))
-        continue;
-
-      const tagName = await first.evaluate((el) => el.tagName).catch(() => "");
-
-      if (String(tagName).toLowerCase() === "select") {
-        await first.selectOption({ label: provinceName });
-        return true;
-      }
-
-      await first.click();
-      const option = this.page
-        .getByRole("option", { name: new RegExp(`^${provinceName}$`) })
-        .first();
-
-      if (await option.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await option.click();
-        return true;
-      }
-
-      const textOption = this.page
-        .locator("*")
-        .filter({ hasText: new RegExp(`^${provinceName}$`) })
-        .first();
-
-      if (await textOption.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await textOption.click();
-        return true;
-      }
-    }
-    return false;
+    return this.searchAndSelect(
+      [
+        this.tabPanel.getByRole("combobox", { name: /จังหวัด/i }),
+        this.tabPanel.locator("#provinceAreaSelect"),
+        this.tabPanel.locator("#provinceSelect"),
+        this.tabPanel.locator("select[name*='province' i]"),
+      ],
+      provinceName,
+      provinceName,
+    );
   }
 
   async selectMultipleProvinces(
     provinceNames: string[],
-    selectedNativeValues: string[] = []
+    selectedNativeValues: string[] = [],
   ): Promise<boolean> {
     const candidates: Locator[] = [
       this.tabPanel.getByRole("combobox", { name: /จังหวัด/i }),
@@ -167,7 +136,7 @@ export class AreaPage {
             if (!selectedNativeValues.includes(provinceName))
               selectedNativeValues.push(provinceName);
             await first.selectOption(
-              selectedNativeValues.map((value) => ({ label: value }))
+              selectedNativeValues.map((value) => ({ label: value })),
             );
           } else {
             await first.selectOption({ label: provinceName });
@@ -190,9 +159,7 @@ export class AreaPage {
           .locator("li, [role='option']")
           .filter({ hasText: new RegExp(`^${provinceName}$`) })
           .first();
-        if (
-          await textOption.isVisible({ timeout: 3000 }).catch(() => false)
-        ) {
+        if (await textOption.isVisible({ timeout: 3000 }).catch(() => false)) {
           await textOption.click();
           return true;
         }
@@ -211,60 +178,21 @@ export class AreaPage {
   // ─── Region Selection ─────────────────────────────────────────────────────
 
   async selectRegion(regionName: string): Promise<boolean> {
-    const candidates: Locator[] = [
-      this.tabPanel.getByRole("combobox", { name: /ภาค/i }),
-      this.tabPanel.locator("#regionAreaSelect"),
-      this.tabPanel.locator("#regionSelect"),
-      this.tabPanel.locator("select[name*='region' i]"),
-      this.tabPanel.locator("select[id*='region' i]"),
-      this.tabPanel.locator("input[placeholder*='ภาค' i]"),
-      this.tabPanel.locator("input[name*='region' i]"),
-    ];
-
-    for (const selectLocator of candidates) {
-      const first = selectLocator.first();
-      if (!(await first.isVisible({ timeout: 3000 }).catch(() => false)))
-        continue;
-
-      const tagName = await first.evaluate((el) => el.tagName).catch(() => "");
-
-      if (String(tagName).toLowerCase() === "select") {
-        await first
-          .selectOption({ label: regionName })
-          .catch(async () =>
-            first.selectOption({ value: regionName })
-          );
-        return true;
-      }
-
-      await first.click();
-      await this.page.waitForTimeout(500);
-
-      const optionCandidates = [
-        this.page.getByRole("option", {
-          name: new RegExp(regionName, "i"),
-        }),
-        this.page.locator(".select2-results__option", {
-          hasText: regionName,
-        }),
-        this.page.locator(".dropdown-item", { hasText: regionName }),
-        this.page.getByText(regionName, { exact: true }),
-      ];
-
-      for (const option of optionCandidates) {
-        const optFirst = option.first();
-        if (await optFirst.isVisible({ timeout: 3000 }).catch(() => false)) {
-          await optFirst.click();
-          return true;
-        }
-      }
-    }
-    return false;
+    return this.searchAndSelect(
+      [
+        this.tabPanel.getByRole("combobox", { name: /ภาค/i }),
+        this.tabPanel.locator("#regionAreaSelect"),
+        this.tabPanel.locator("#regionSelect"),
+        this.tabPanel.locator("select[name*='region' i]"),
+      ],
+      regionName,
+      regionName,
+    );
   }
 
   async selectMultipleRegions(
     regionNames: string[],
-    selectedNativeValues: string[] = []
+    selectedNativeValues: string[] = [],
   ): Promise<boolean> {
     const candidates: Locator[] = [
       this.tabPanel.getByRole("combobox", { name: /ภาค/i }),
@@ -285,13 +213,13 @@ export class AreaPage {
 
         if (String(tagName).toLowerCase() === "select") {
           const isMultiple = await first.evaluate(
-            (el) => (el as HTMLSelectElement).multiple
+            (el) => (el as HTMLSelectElement).multiple,
           );
           if (isMultiple) {
             if (!selectedNativeValues.includes(regionName))
               selectedNativeValues.push(regionName);
             await first.selectOption(
-              selectedNativeValues.map((v) => ({ label: v }))
+              selectedNativeValues.map((v) => ({ label: v })),
             );
           } else {
             await first.selectOption({ label: regionName });
@@ -314,9 +242,7 @@ export class AreaPage {
           .locator("li, [role='option']")
           .filter({ hasText: new RegExp(`^${regionName}$`) })
           .first();
-        if (
-          await textOption.isVisible({ timeout: 3000 }).catch(() => false)
-        ) {
+        if (await textOption.isVisible({ timeout: 3000 }).catch(() => false)) {
           await textOption.click();
           return true;
         }
@@ -340,7 +266,7 @@ export class AreaPage {
         response.url().includes("/api/app/capFeed/") &&
         response.url().toLowerCase().includes("area") &&
         response.status() === 200,
-      { timeout: 15000 }
+      { timeout: 15000 },
     );
   }
 
@@ -349,7 +275,7 @@ export class AreaPage {
       (request) =>
         request.url().includes("/api/app/capFeed/") &&
         request.url().toLowerCase().includes("area"),
-      { timeout: 15000 }
+      { timeout: 15000 },
     );
   }
 
@@ -405,7 +331,10 @@ export class AreaPage {
   }
 
   async getSeverityCheckbox(label: "ร้ายแรงมาก" | "ร้ายแรง"): Promise<Locator> {
-    const idMap = { ร้ายแรงมาก: "#severityExtreme", ร้ายแรง: "#severitySevere" };
+    const idMap = {
+      ร้ายแรงมาก: "#severityExtreme",
+      ร้ายแรง: "#severitySevere",
+    };
     const candidates = [
       this.advancedFilterPanel.locator(idMap[label]).first(),
       this.advancedFilterPanel
@@ -422,7 +351,7 @@ export class AreaPage {
   }
 
   async getCertaintyCheckbox(
-    label: "สังเกตการณ์" | "เป็นไปได้"
+    label: "สังเกตการณ์" | "เป็นไปได้",
   ): Promise<Locator> {
     const idMap = {
       สังเกตการณ์: "#certaintyObserved",
@@ -517,9 +446,7 @@ export class AreaPage {
   }
 
   normalizeProvince(value: unknown): string {
-    return this.normalizeText(
-      String(value ?? "").replace(/^จังหวัด\s*/u, "")
-    );
+    return this.normalizeText(String(value ?? "").replace(/^จังหวัด\s*/u, ""));
   }
 
   normalizeRegion(value: unknown): string {
@@ -532,12 +459,8 @@ export class AreaPage {
     if (!Number.isNaN(iso)) return iso;
 
     const match =
-      text.match(
-        /(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/
-      ) ||
-      text.match(
-        /(\d{1,2})-(\d{1,2})-(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/
-      );
+      text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/) ||
+      text.match(/(\d{1,2})-(\d{1,2})-(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
 
     if (match) {
       const [, d, m, y, hh = "0", mm = "0"] = match;
@@ -550,5 +473,136 @@ export class AreaPage {
     if (!isoDate) return "";
     const date = new Date(isoDate);
     return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+  }
+
+  // ─── AUTO HEALING CORE ─────────────────────────────────────
+
+  private async firstVisible(
+    candidates: Locator[],
+    timeout = 3000,
+  ): Promise<Locator | null> {
+    for (let i = 0; i < candidates.length; i++) {
+      const locator = candidates[i].first();
+      const visible = await locator.isVisible({ timeout }).catch(() => false);
+
+      if (visible) {
+        console.log(`🧠 [auto-heal] matched locator #${i + 1}`);
+        return locator;
+      }
+    }
+    return null;
+  }
+
+  private async requireVisible(
+    candidates: Locator[],
+    error: string,
+  ): Promise<Locator> {
+    const locator = await this.firstVisible(candidates);
+    if (!locator) throw new Error(error);
+    return locator;
+  }
+
+  private async safeClick(locator: Locator) {
+    await locator.scrollIntoViewIfNeeded().catch(() => {});
+    await locator.click().catch(async () => {
+      await locator.click({ force: true });
+    });
+  }
+
+  private dropdownCandidates(): Locator[] {
+    return [
+      this.page.locator(".select2-results:visible"),
+      this.page.locator(".select2-container--open"),
+      this.page.locator(".ant-select-dropdown:visible"),
+      this.page.locator(".cdk-overlay-pane:visible"),
+      this.page.locator(".dropdown-menu:visible"),
+    ];
+  }
+
+  private async getDropdown(): Promise<Locator> {
+    return this.requireVisible(
+      this.dropdownCandidates(),
+      "❌ ต้องมี dropdown แสดง",
+    );
+  }
+
+  private async getDropdownSearchInput(): Promise<Locator> {
+    const candidates = [
+      this.page.locator(".select2-container--open input.select2-search__field"),
+      this.page.locator(".ant-select-dropdown:visible input"),
+      this.page.locator(".cdk-overlay-pane:visible input"),
+      this.page.locator(".dropdown-menu:visible input"),
+    ];
+
+    return this.requireVisible(candidates, "❌ ต้องมีช่อง search ใน dropdown");
+  }
+
+  async searchAndSelect(
+    triggerCandidates: Locator[],
+    keyword: string,
+    target: string,
+  ): Promise<boolean> {
+    const trigger = await this.requireVisible(
+      triggerCandidates,
+      `❌ ไม่พบ trigger สำหรับ ${target}`,
+    );
+
+    const tagName = await trigger.evaluate((el) => el.tagName.toLowerCase());
+
+    // ✅ native select
+    if (tagName === "select") {
+      await trigger.selectOption({ label: target }).catch(async () => {
+        await trigger.selectOption({ value: target });
+      });
+      return true;
+    }
+
+    // ✅ open dropdown
+    await this.safeClick(trigger);
+
+    const searchInput = await this.getDropdownSearchInput();
+
+    await searchInput.fill("");
+    await searchInput.fill(keyword);
+    await this.page.waitForTimeout(300);
+
+    const dropdown = await this.getDropdown();
+
+    const option = await this.firstVisible([
+      this.page.getByRole("option", { name: new RegExp(target, "i") }),
+      dropdown
+        .locator("[role='option'], li, .dropdown-item")
+        .filter({ hasText: target }),
+      this.page.locator(".select2-results__option", { hasText: target }),
+      this.page.getByText(target, { exact: true }),
+    ]);
+
+    if (!option) return false;
+
+    await this.safeClick(option);
+    return true;
+  }
+
+  async assertNoResultDropdown() {
+    const dropdown = await this.getDropdown();
+
+    const noResult = await this.requireVisible(
+      [
+        dropdown.getByText(/No results found|No result found|ไม่พบ/i),
+        this.page.getByText(/No results found|No result found|ไม่พบ/i),
+      ],
+      '❌ ต้องแสดงข้อความ "No results found"',
+    );
+
+    await expect(noResult).toBeVisible();
+
+    const options = dropdown.locator(
+      "[role='option']:visible, li:visible, .dropdown-item:visible",
+    );
+
+    const texts = (await options.allInnerTexts()).map((t) => t.trim());
+    const realOptions = texts.filter((t) => !/no result|ไม่พบ/i.test(t));
+
+    expect(realOptions.length).toBe(0);
   }
 }

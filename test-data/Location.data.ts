@@ -13,11 +13,13 @@ export const GEO_BANGKOK = {
 export const GEO_CHIANG_MAI = {
   latitude: 18.8958,
   longitude: 98.957,
+  province: "เชียงใหม่",
 };
 
 export const GEO_CHIANG_MAI_INT = {
   latitude: 18,
   longitude: 98,
+  province: "เชียงใหม่",
 };
 
 export const GEO_JAKARTA = {

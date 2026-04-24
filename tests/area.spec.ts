@@ -1,4 +1,4 @@
-import { test, expect, type BrowserContext } from "@playwright/test";
+import { test, expect, type BrowserContext, Locator } from "@playwright/test";
 import { AreaPage } from "../page-object/AreaPage.ts";
 import { AREA_DATA } from "../test-data/area.data";
 
@@ -2128,12 +2128,17 @@ test.describe("Area", () => {
   }) => {
     test.setTimeout(60000);
 
-    // Search
-    const searchResponsePromise = areaPage.waitForAreaApiResponse();
-    await areaPage.clickSearch();
-    const searchResponse = await searchResponsePromise;
-    const searchData = await searchResponse.json();
-    await page.waitForLoadState("networkidle");
+    // Step 1: เลือกหลายจังหวัดก่อนค้นหา เพื่อให้ XML URL มี parameter ครบ
+    const provincesSelected = await areaPage.selectMultipleProvinces([
+      ...AREA_DATA.multipleProvinces,
+    ]);
+    expect(
+      provincesSelected,
+      `❌ ต้องเลือกจังหวัด ${AREA_DATA.multipleProvinces.join(", ")} ได้`,
+    ).toBeTruthy();
+
+    // Step 2: ค้นหา
+    const searchData = await areaPage.searchAndGetResponse();
 
     // Expect: at least 1 item with xmlLink
     const items: any[] = searchData?.items ?? [];
@@ -2147,8 +2152,9 @@ test.describe("Area", () => {
     const apiXmlLink: string = firstItem?.xmlLink ?? "";
 
     expect(apiXmlLink, "❌ API ต้องมี xmlLink").toBeTruthy();
+    console.log(`📌 API xmlLink: ${apiXmlLink}`);
 
-    // Verify first card content
+    // Step 3: ตรวจสอบ Alert Card
     await expect(areaPage.cards.first()).toBeVisible({ timeout: 10000 });
     const cardText = await areaPage.cards.first().innerText();
     expect(cardText, `❌ card ต้องแสดงชื่อเหตุการณ์ "${apiEvent}"`).toContain(
@@ -2157,8 +2163,9 @@ test.describe("Area", () => {
     expect(cardText, `❌ card ต้องแสดงความรุนแรง "${apiSeverity}"`).toContain(
       apiSeverity,
     );
+    console.log("✅ Alert Card แสดงข้อมูลถูกต้อง");
 
-    // Copy XML link from card
+    // Step 4: Copy XML link จาก card
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 
     const copyButtonCandidates = [
@@ -2171,7 +2178,7 @@ test.describe("Area", () => {
         .first(),
     ];
 
-    let copyButton = null;
+    let copyButton: Locator | null = null;
     for (const locator of copyButtonCandidates) {
       if (await locator.isVisible({ timeout: 3000 }).catch(() => false)) {
         copyButton = locator;
@@ -2191,6 +2198,7 @@ test.describe("Area", () => {
     expect(expectedCopiedUrl, "❌ ต้องพบ URL XML ใน card").toMatch(
       /^https?:\/\/.+/i,
     );
+    console.log(`📌 Expected URL ใน card: ${expectedCopiedUrl}`);
 
     await copyButton!.click();
     await page.waitForTimeout(500);
@@ -2198,6 +2206,7 @@ test.describe("Area", () => {
     const copiedUrl = (
       await page.evaluate(() => navigator.clipboard.readText())
     ).trim();
+    console.log(`📌 Copied URL: ${copiedUrl}`);
 
     // Expect 1: copied URL matches card and API
     expect(copiedUrl, "❌ URL ที่ copy ต้องตรงกับที่แสดงใน card").toBe(
@@ -2206,19 +2215,21 @@ test.describe("Area", () => {
     expect(copiedUrl, "❌ URL ที่ copy ต้องตรงกับ xmlLink จาก API").toBe(
       apiXmlLink,
     );
+    console.log("✅ คัดลอก URL XML ได้ถูกต้อง");
 
-    // Step 5: Open XML link
+    // Step 5: เปิดลิงก์ XML
     const xmlApiResponse = await page.request.get(copiedUrl);
     expect(
       xmlApiResponse.ok(),
       `❌ URL ต้อง response ok (status: ${xmlApiResponse.status()})`,
     ).toBeTruthy();
 
-    // Expect 2: content is XML
+    // Expect 2: content ต้องเป็น XML
     const xmlContent = await xmlApiResponse.text();
     expect(xmlContent, "❌ เนื้อหาต้องเป็น XML (ATOM หรือ CAP)").toMatch(
       /<\?xml|<feed|<alert/i,
     );
+    console.log(`📌 XML content (preview): ${xmlContent.substring(0, 150)}`);
 
     // Expect 3: XML data matches card
     if (apiEvent) {
@@ -2231,6 +2242,11 @@ test.describe("Area", () => {
         apiSeverity,
       );
     }
+    console.log("✅ ข้อมูลใน XML ตรงกับ Alert Card");
+
+    console.log(
+      `✅ TC-DA-AREA-034 ผ่าน — สามารถเปิด XML ได้สำเร็จ | จังหวัด: ${AREA_DATA.multipleProvinces.join(", ")}`,
+    );
   });
 
   // ─── TC-DA-AREA-035 ────────────────────────────────────────────────────────

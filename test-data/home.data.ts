@@ -89,5 +89,34 @@ export const HOME_DATA = {
     loading: ".loading, .spinner",
   },
 } as const;
-
+export const TEST_CAP_ITEM = {
+  sender: "กรมป้องกันและบรรเทาสาธารณภัย",
+  sendDateTime: "2026-04-22T22:27:40.9004642",
+  status: "Active",
+  xmlLink:
+    "https://ndwc-cap-dev.azurewebsites.net/uploads/Cap/NDWC20260422222328_2.xml",
+  event: "มาตรฐานทั่วไป",
+  eventEn: "General SOP",
+  effectiveTime: "2026-04-22T22:23:00",
+  expiredTime: "2026-04-30T00:00:00",
+  urgency: "ทันที",
+  severityId: 1,
+  severity: "ร้ายแรงมาก",
+  certainty: "สังเกตการณ์",
+  senderName: "กรมป้องกันและบรรเทาสาธารณภัย",
+  headline: "Hacks test 2 จังหวัด",
+  instruction: "Hacks test 2 จังหวัด",
+  description: "Hacks test 2 จังหวัด",
+  areaDesc: "เชียงใหม่ เชียงราย",
+  areasItem: [
+    {
+      geoCodeId: "TH-50 TH-57  ",
+      areaDescription: "เชียงใหม่ เชียงราย",
+      region: null,
+      province: "เชียงใหม่ เชียงราย",
+      tambon: null,
+      polygon: null,
+    },
+  ],
+} as const;
 export type HomeCombinedFilter = typeof HOME_DATA.FILTERS.combined;

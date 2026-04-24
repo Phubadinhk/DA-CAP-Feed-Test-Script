@@ -21,6 +21,9 @@ export const HOME_DATA = {
     DEFAULT: "มาตรฐานทั่วไป",
     NO_RESULT: "การแจ้งเตือนระดับชาติ",
   },
+  EVENT_IDS: {
+    NO_RESULT: 47,
+  },
   SORT: {
     LATEST: "เหตุการณ์ล่าสุด",
     OLDEST: "เหตุการณ์เก่าสุด",
